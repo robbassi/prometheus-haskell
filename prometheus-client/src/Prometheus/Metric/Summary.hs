@@ -25,6 +25,7 @@ import Prometheus.Metric
 import Prometheus.Metric.Observer
 import Prometheus.MonadMonitor
 
+import Data.Ratio
 import qualified Control.Concurrent.STM as STM
 import Control.DeepSeq
 import Control.Monad.IO.Class
@@ -33,7 +34,7 @@ import Data.Foldable (foldr')
 import Data.Int (Int64)
 import Data.Monoid ((<>))
 import qualified Data.Text as T
-
+import Debug.Trace (traceShow)
 
 newtype Summary = MkSummary (STM.TVar Estimator)
 
@@ -187,8 +188,10 @@ query est@(Estimator count _ _ items) q = findQuantile allRs items
         findQuantile _        _    = error "Query impossibility"
 
 invariant :: Estimator -> Rational -> Rational
-invariant (Estimator count _ quantiles _) r = max 1
-                                            $ minimum $ map fj quantiles
+invariant (Estimator count _ quantiles _) r = 
+    let res = max 1 $ minimum $ map fj quantiles
+        ratio = (numerator res, denominator res)
+    in traceShow ratio res
     where
         n = fromIntegral count
         fj (q, e) | q * n <= r = 2 * e * r / q
