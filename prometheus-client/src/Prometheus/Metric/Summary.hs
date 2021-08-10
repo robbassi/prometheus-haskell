@@ -152,13 +152,13 @@ insert value estimator@(Estimator oldCount oldSum quantiles items) =
 
 compress :: Estimator -> Estimator
 compress est@(Estimator _ _ _ [])    = est
-compress est@(Estimator _ _ _ items) = est {
-        estItems = (minItem :)
+compress est@(Estimator _ _ _ items) =
+    let estItems' = (minItem :)
                  $ foldr' compressPair []
                  $ drop 1  -- The exact minimum item must be kept exactly.
                  $ zip items
                  $ scanl (+) 0 (map itemG items)
-    }
+    in traceShow estItems' (est { estItems = estItems' })
     where
         minItem = head items
         compressPair (a, _) [] = [a]
@@ -188,10 +188,7 @@ query est@(Estimator count _ _ items) q = findQuantile allRs items
         findQuantile _        _    = error "Query impossibility"
 
 invariant :: Estimator -> Rational -> Rational
-invariant (Estimator count _ quantiles _) r = 
-    let res = max 1 $ minimum $ map fj quantiles
-        ratio = (numerator res, denominator res)
-    in traceShow ratio res
+invariant (Estimator count _ quantiles _) r = max 1 $ minimum $ map fj quantiles
     where
         n = fromIntegral count
         fj (q, e) | q * n <= r = 2 * e * r / q
