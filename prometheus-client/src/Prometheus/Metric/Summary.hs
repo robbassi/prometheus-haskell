@@ -158,7 +158,7 @@ compress est@(Estimator _ _ _ items) =
                  $ drop 1  -- The exact minimum item must be kept exactly.
                  $ zip items
                  $ scanl (+) 0 (map itemG items)
-    in traceShow estItems' (est { estItems = estItems' })
+    in traceShow (length estItems') (est { estItems = estItems' })
     where
         minItem = head items
         compressPair (a, _) [] = [a]
